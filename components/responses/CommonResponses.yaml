@@ -1,79 +1,101 @@
-BadRequest:
-  description: Petición inválida — parámetros incorrectos o cuerpo malformado
-  content:
-    application/json:
-      schema:
-        $ref: '../schemas/Error.yaml'
-      example:
-        code: "VALIDATION_ERROR"
-        message: "El campo 'model' es obligatorio"
-        timestamp: "2025-05-08T10:30:00Z"
-        traceId: "trace-001"
+openapi: "3.0.3"
+info:
+  title: Common Responses
+  description: >
+    Schemas estándar de respuesta reutilizables en todas las APIs.
+    Subir a Apicurio como: grupo=common, artifactId=common-responses
+  version: "1.0.0"
+paths: {}
+components:
+  schemas:
+
+    Error:
+      type: object
+      description: Respuesta de error normalizada para cualquier fallo de la API
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+          description: Código de error en SCREAMING_SNAKE_CASE
+          example: "RESOURCE_NOT_FOUND"
+        message:
+          type: string
+          description: Descripción legible del error
+          example: "El recurso solicitado no existe"
         details:
-          - field: "model"
-            issue: "Campo requerido ausente"
+          type: array
+          description: Errores de validación o detalles adicionales
+          items:
+            type: string
+          example:
+            - "El campo 'name' es obligatorio"
+            - "El campo 'price' debe ser mayor que 0"
+        traceId:
+          type: string
+          description: ID de trazabilidad para correlacionar con los logs
+          example: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
 
-Unauthorized:
-  description: No autenticado — API key ausente o inválida
-  content:
-    application/json:
-      schema:
-        $ref: '../schemas/Error.yaml'
-      example:
-        code: "UNAUTHORIZED"
-        message: "API key inválida o expirada"
-        timestamp: "2025-05-08T10:30:00Z"
-        traceId: "trace-002"
+    Pagination:
+      type: object
+      description: Metadatos de paginación incluidos en respuestas de listas
+      required:
+        - page
+        - pageSize
+        - totalElements
+        - totalPages
+      properties:
+        page:
+          type: integer
+          minimum: 0
+          description: Página actual (base 0)
+          example: 0
+        pageSize:
+          type: integer
+          minimum: 1
+          maximum: 100
+          description: Número de elementos por página
+          example: 20
+        totalElements:
+          type: integer
+          minimum: 0
+          description: Total de elementos que cumplen el filtro aplicado
+          example: 150
+        totalPages:
+          type: integer
+          minimum: 0
+          description: Total de páginas disponibles
+          example: 8
 
-Forbidden:
-  description: Sin permisos para acceder al recurso solicitado
-  content:
-    application/json:
-      schema:
-        $ref: '../schemas/Error.yaml'
-      example:
-        code: "FORBIDDEN"
-        message: "No tienes permisos para usar este modelo"
-        timestamp: "2025-05-08T10:30:00Z"
-        traceId: "trace-003"
+    PagedResponse:
+      type: object
+      description: >
+        Envolvente genérico para respuestas paginadas.
+        El campo 'data' se especializa via allOf en cada modelo de dominio.
+      required:
+        - data
+        - pagination
+      properties:
+        data:
+          type: array
+          description: Lista de elementos de la página actual
+          items: {}
+        pagination:
+          $ref: "#/components/schemas/Pagination"
 
-NotFound:
-  description: Recurso no encontrado
-  content:
-    application/json:
-      schema:
-        $ref: '../schemas/Error.yaml'
-      example:
-        code: "NOT_FOUND"
-        message: "El modelo solicitado no existe"
-        timestamp: "2025-05-08T10:30:00Z"
-        traceId: "trace-004"
-
-TooManyRequests:
-  description: Rate limit excedido
-  headers:
-    Retry-After:
-      description: Segundos hasta que el cliente puede reintentar
-      schema:
-        type: integer
-  content:
-    application/json:
-      schema:
-        $ref: '../schemas/Error.yaml'
-      example:
-        code: "RATE_LIMIT_EXCEEDED"
-        message: "Has excedido el límite de peticiones por minuto"
-        timestamp: "2025-05-08T10:30:00Z"
-        traceId: "trace-005"
-
-InternalServerError:
-  description: Error interno del servidor
-  content:
-    application/json:
-      schema:
-        $ref: '../schemas/Error.yaml'
-      example:
-        code: "INTERNAL_ERROR"
-        message: "Ha ocurrido un error inesperado"
-        timestamp: "2025-05-08T10:30:00Z"
-        traceId: "trace-006"
+    SuccessResponse:
+      type: object
+      description: >
+        Respuesta estándar para operaciones de escritura (POST/PUT/DELETE)
+        que no devuelven un recurso completo como resultado.
+      required:
+        - success
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+          description: Mensaje informativo sobre la operación realizada
+          example: "Recurso creado correctamente"
