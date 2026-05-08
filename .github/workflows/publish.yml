@@ -83,39 +83,10 @@ jobs:
       - name: Setup Pages
         uses: actions/configure-pages@v4
 
-      - name: Prepare dist
-        run: |
-          mkdir -p dist
-          # Copiar toda la estructura de components
-          cp -r components dist/
-          # Generar índice de schemas disponibles
-          echo "Generando índice de schemas..."
-          python3 -c "
-          import os, json, yaml
-
-          schemas = {}
-          for root, dirs, files in os.walk('components'):
-              for f in files:
-                  if f.endswith('.yaml') or f.endswith('.json'):
-                      path = os.path.join(root, f)
-                      rel = path.replace('components/', '')
-                      schemas[rel] = path
-
-          index = {
-              'version': '1.0',
-              'repository': 'common-schemas',
-              'schemas': list(schemas.keys()),
-              'baseUrl': 'https://\${{ github.repository_owner }}.github.io/common-schemas'
-          }
-          with open('dist/index.json', 'w') as out:
-              json.dump(index, out, indent=2)
-          print('✅ index.json generado con', len(schemas), 'schemas')
-          "
-
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: './dist'
+          path: './'
 
       - name: Deploy to GitHub Pages
         id: deployment
