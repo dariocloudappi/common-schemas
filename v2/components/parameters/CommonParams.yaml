@@ -1,0 +1,50 @@
+PageParam:
+  name: page
+  in: query
+  description: Número de página (base 1)
+  required: false
+  schema:
+    type: integer
+    minimum: 1
+    default: 1
+  example: 1
+
+PageSizeParam:
+  name: pageSize
+  in: query
+  description: Número de resultados por página
+  required: false
+  schema:
+    type: integer
+    minimum: 1
+    maximum: 100
+    default: 20
+  example: 20
+
+ModelIdParam:
+  name: modelId
+  in: path
+  description: Identificador único del modelo
+  required: true
+  schema:
+    type: string
+  example: "gpt-4o"
+
+CorrelationIdHeader:
+  name: X-Correlation-ID
+  in: header
+  description: ID de correlación para trazabilidad distribuida
+  required: false
+  schema:
+    type: string
+    format: uuid
+  example: "123e4567-e89b-12d3-a456-426614174000"
+
+ApiVersionHeader:
+  name: X-API-Version
+  in: header
+  description: Versión de la API solicitada
+  required: false
+  schema:
+    type: string
+  example: "v1"
