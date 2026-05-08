@@ -13,15 +13,11 @@ permissions:
   pages: write
   id-token: write
 
-# Solo permite un deploy simultáneo
 concurrency:
   group: "pages"
   cancel-in-progress: false
 
 jobs:
-  # ─────────────────────────────────────────────
-  # JOB 1: Validar todos los schemas YAML
-  # ─────────────────────────────────────────────
   validate:
     name: Validate Schemas
     runs-on: ubuntu-latest
@@ -41,7 +37,6 @@ jobs:
 
       - name: Lint all YAML schemas
         run: |
-          echo "🔍 Validando schemas individuales..."
           find components/schemas -name "*.yaml" | while read file; do
             echo "  → Validando: $file"
             redocly lint --skip-rule=no-unused-components "$file" || true
@@ -49,23 +44,16 @@ jobs:
 
       - name: Validate YAML syntax
         run: |
-          echo "🔍 Verificando sintaxis YAML..."
           find components -name "*.yaml" | while read file; do
             python3 -c "
           import yaml, sys
           try:
               yaml.safe_load(open('$file'))
-              print('  ✅ OK: $file')
           except Exception as e:
-              print('  ❌ ERROR en $file:', e)
               sys.exit(1)
             "
           done
 
-  # ─────────────────────────────────────────────
-  # JOB 2: Publicar a GitHub Pages
-  # Solo en push a main (no en PRs)
-  # ─────────────────────────────────────────────
   deploy:
     name: Deploy to GitHub Pages
     needs: validate
@@ -92,11 +80,7 @@ jobs:
         id: deployment
         uses: actions/deploy-pages@v4
 
-  # ─────────────────────────────────────────────
-  # JOB 3: Notificar repos dependientes (opcional)
-  # Dispara un workflow_dispatch en repos que usan
-  # estos schemas (requiere PAT con repo scope)
-  # ─────────────────────────────────────────────
+
   notify-dependents:
     name: Notify Dependent Repos
     needs: deploy
@@ -110,4 +94,4 @@ jobs:
             -H "Accept: application/vnd.github.v3+json" \
             "https://api.github.com/repos/${{ github.repository_owner }}/api-modelos-ia/dispatches" \
             -d '{"event_type":"schemas-updated","client_payload":{"source":"common-schemas","ref":"${{ github.sha }}"}}'
-        continue-on-error: true  # No bloquear si el repo destino no existe
+        continue-on-error: true
