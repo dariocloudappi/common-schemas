@@ -1,0 +1,36 @@
+type: object
+description: Estructura estándar de error para todas las APIs
+required:
+  - code
+  - message
+  - timestamp
+properties:
+  code:
+    type: string
+    description: Código de error interno
+    example: "MODEL_UNAVAILABLE"
+  message:
+    type: string
+    description: Mensaje legible por humanos
+    example: "El modelo solicitado no está disponible en este momento"
+  timestamp:
+    type: string
+    format: date-time
+    description: Momento en que ocurrió el error
+    example: "2025-05-08T10:30:00Z"
+  traceId:
+    type: string
+    description: ID de trazabilidad para correlacionar logs
+    example: "abc123-xyz-789"
+  details:
+    type: array
+    description: Lista de errores de validación detallados
+    items:
+      type: object
+      properties:
+        field:
+          type: string
+          example: "model"
+        issue:
+          type: string
+          example: "Valor no permitido"

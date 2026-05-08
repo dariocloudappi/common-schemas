@@ -1,0 +1,28 @@
+type: object
+description: Uso de tokens en una llamada a un modelo de IA
+required:
+  - promptTokens
+  - completionTokens
+  - totalTokens
+properties:
+  promptTokens:
+    type: integer
+    description: Tokens consumidos por el prompt de entrada
+    example: 412
+  completionTokens:
+    type: integer
+    description: Tokens generados en la respuesta
+    example: 230
+  totalTokens:
+    type: integer
+    description: Total de tokens (prompt + completion)
+    example: 642
+  cachedTokens:
+    type: integer
+    description: Tokens servidos desde caché (si aplica)
+    example: 100
+  estimatedCostUsd:
+    type: number
+    format: double
+    description: Coste estimado de la llamada en USD
+    example: 0.00321

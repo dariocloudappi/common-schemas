@@ -1,0 +1,55 @@
+type: object
+description: Información de un modelo de IA disponible
+required:
+  - id
+  - name
+  - provider
+  - status
+properties:
+  id:
+    type: string
+    description: Identificador único del modelo
+    example: "gpt-4o"
+  name:
+    type: string
+    description: Nombre legible del modelo
+    example: "GPT-4o"
+  provider:
+    type: string
+    description: Proveedor del modelo
+    enum:
+      - openai
+      - anthropic
+      - google
+      - mistral
+      - custom
+    example: "openai"
+  status:
+    type: string
+    description: Estado actual del modelo
+    enum:
+      - available
+      - deprecated
+      - maintenance
+      - beta
+    example: "available"
+  contextWindow:
+    type: integer
+    description: Tamaño máximo del contexto en tokens
+    example: 128000
+  capabilities:
+    type: array
+    description: Capacidades del modelo
+    items:
+      type: string
+      enum:
+        - text
+        - vision
+        - code
+        - function-calling
+        - embeddings
+    example: ["text", "vision", "code", "function-calling"]
+  version:
+    type: string
+    description: Versión del modelo
+    example: "2025-03-01"

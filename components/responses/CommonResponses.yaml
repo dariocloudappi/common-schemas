@@ -1,0 +1,79 @@
+BadRequest:
+  description: Petición inválida — parámetros incorrectos o cuerpo malformado
+  content:
+    application/json:
+      schema:
+        $ref: '../schemas/Error.yaml'
+      example:
+        code: "VALIDATION_ERROR"
+        message: "El campo 'model' es obligatorio"
+        timestamp: "2025-05-08T10:30:00Z"
+        traceId: "trace-001"
+        details:
+          - field: "model"
+            issue: "Campo requerido ausente"
+
+Unauthorized:
+  description: No autenticado — API key ausente o inválida
+  content:
+    application/json:
+      schema:
+        $ref: '../schemas/Error.yaml'
+      example:
+        code: "UNAUTHORIZED"
+        message: "API key inválida o expirada"
+        timestamp: "2025-05-08T10:30:00Z"
+        traceId: "trace-002"
+
+Forbidden:
+  description: Sin permisos para acceder al recurso solicitado
+  content:
+    application/json:
+      schema:
+        $ref: '../schemas/Error.yaml'
+      example:
+        code: "FORBIDDEN"
+        message: "No tienes permisos para usar este modelo"
+        timestamp: "2025-05-08T10:30:00Z"
+        traceId: "trace-003"
+
+NotFound:
+  description: Recurso no encontrado
+  content:
+    application/json:
+      schema:
+        $ref: '../schemas/Error.yaml'
+      example:
+        code: "NOT_FOUND"
+        message: "El modelo solicitado no existe"
+        timestamp: "2025-05-08T10:30:00Z"
+        traceId: "trace-004"
+
+TooManyRequests:
+  description: Rate limit excedido
+  headers:
+    Retry-After:
+      description: Segundos hasta que el cliente puede reintentar
+      schema:
+        type: integer
+  content:
+    application/json:
+      schema:
+        $ref: '../schemas/Error.yaml'
+      example:
+        code: "RATE_LIMIT_EXCEEDED"
+        message: "Has excedido el límite de peticiones por minuto"
+        timestamp: "2025-05-08T10:30:00Z"
+        traceId: "trace-005"
+
+InternalServerError:
+  description: Error interno del servidor
+  content:
+    application/json:
+      schema:
+        $ref: '../schemas/Error.yaml'
+      example:
+        code: "INTERNAL_ERROR"
+        message: "Ha ocurrido un error inesperado"
+        timestamp: "2025-05-08T10:30:00Z"
+        traceId: "trace-006"

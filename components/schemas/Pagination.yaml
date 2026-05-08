@@ -1,0 +1,35 @@
+type: object
+description: Metadatos de paginación estándar para respuestas de lista
+required:
+  - page
+  - pageSize
+  - totalItems
+  - totalPages
+properties:
+  page:
+    type: integer
+    minimum: 1
+    description: Página actual (base 1)
+    example: 1
+  pageSize:
+    type: integer
+    minimum: 1
+    maximum: 100
+    description: Número de ítems por página
+    example: 20
+  totalItems:
+    type: integer
+    description: Total de ítems en el dataset completo
+    example: 157
+  totalPages:
+    type: integer
+    description: Total de páginas disponibles
+    example: 8
+  hasNextPage:
+    type: boolean
+    description: Indica si existe una página siguiente
+    example: true
+  hasPreviousPage:
+    type: boolean
+    description: Indica si existe una página anterior
+    example: false

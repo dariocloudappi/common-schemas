@@ -1,0 +1,29 @@
+type: object
+description: Mensaje en una conversación de chat con un modelo
+required:
+  - role
+  - content
+properties:
+  role:
+    type: string
+    description: Rol del emisor del mensaje
+    enum:
+      - system
+      - user
+      - assistant
+    example: "user"
+  content:
+    type: string
+    description: Contenido textual del mensaje
+    example: "¿Puedes explicarme cómo funciona la atención en transformers?"
+  name:
+    type: string
+    description: Nombre opcional del participante (útil en chats multi-agente)
+    example: "agente-supervisor"
+  metadata:
+    type: object
+    description: Metadatos adicionales libres asociados al mensaje
+    additionalProperties: true
+    example:
+      source: "web-ui"
+      sessionId: "sess-abc123"

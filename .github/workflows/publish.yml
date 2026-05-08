@@ -1,0 +1,143 @@
+name: Validate & Publish Common Schemas
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Solo permite un deploy simultáneo
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  # ─────────────────────────────────────────────
+  # JOB 1: Validar todos los schemas YAML
+  # ─────────────────────────────────────────────
+  validate:
+    name: Validate Schemas
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: |
+          npm install -g @redocly/cli@latest
+          npm install -g ajv-cli@latest
+
+      - name: Lint all YAML schemas
+        run: |
+          echo "🔍 Validando schemas individuales..."
+          find components/schemas -name "*.yaml" | while read file; do
+            echo "  → Validando: $file"
+            redocly lint --skip-rule=no-unused-components "$file" || true
+          done
+
+      - name: Validate YAML syntax
+        run: |
+          echo "🔍 Verificando sintaxis YAML..."
+          find components -name "*.yaml" | while read file; do
+            python3 -c "
+          import yaml, sys
+          try:
+              yaml.safe_load(open('$file'))
+              print('  ✅ OK: $file')
+          except Exception as e:
+              print('  ❌ ERROR en $file:', e)
+              sys.exit(1)
+            "
+          done
+
+  # ─────────────────────────────────────────────
+  # JOB 2: Publicar a GitHub Pages
+  # Solo en push a main (no en PRs)
+  # ─────────────────────────────────────────────
+  deploy:
+    name: Deploy to GitHub Pages
+    needs: validate
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: Prepare dist
+        run: |
+          mkdir -p dist
+          # Copiar toda la estructura de components
+          cp -r components dist/
+          # Generar índice de schemas disponibles
+          echo "Generando índice de schemas..."
+          python3 -c "
+          import os, json, yaml
+
+          schemas = {}
+          for root, dirs, files in os.walk('components'):
+              for f in files:
+                  if f.endswith('.yaml') or f.endswith('.json'):
+                      path = os.path.join(root, f)
+                      rel = path.replace('components/', '')
+                      schemas[rel] = path
+
+          index = {
+              'version': '1.0',
+              'repository': 'common-schemas',
+              'schemas': list(schemas.keys()),
+              'baseUrl': 'https://\${{ github.repository_owner }}.github.io/common-schemas'
+          }
+          with open('dist/index.json', 'w') as out:
+              json.dump(index, out, indent=2)
+          print('✅ index.json generado con', len(schemas), 'schemas')
+          "
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: './dist'
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+  # ─────────────────────────────────────────────
+  # JOB 3: Notificar repos dependientes (opcional)
+  # Dispara un workflow_dispatch en repos que usan
+  # estos schemas (requiere PAT con repo scope)
+  # ─────────────────────────────────────────────
+  notify-dependents:
+    name: Notify Dependent Repos
+    needs: deploy
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    steps:
+      - name: Trigger re-validation in api-modelos-ia
+        run: |
+          curl -X POST \
+            -H "Authorization: Bearer ${{ secrets.DEPENDENTS_PAT }}" \
+            -H "Accept: application/vnd.github.v3+json" \
+            "https://api.github.com/repos/${{ github.repository_owner }}/api-modelos-ia/dispatches" \
+            -d '{"event_type":"schemas-updated","client_payload":{"source":"common-schemas","ref":"${{ github.sha }}"}}'
+        continue-on-error: true  # No bloquear si el repo destino no existe
